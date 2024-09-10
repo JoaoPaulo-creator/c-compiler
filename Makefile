@@ -14,5 +14,3 @@ all: ${OBJECTS}
 clean:
 	rm ./main
 	rm -rf ${OBJECTS}
-
-
