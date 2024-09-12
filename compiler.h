@@ -26,6 +26,11 @@ enum {
   TOKEN_TYPE_NEWLINE,
 };
 
+enum {
+  LEXICAL_ANALYSIS_ALL_OK,
+  LEXICAL_ANALYSIS_INPUT_ERROR,
+};
+
 // vai checar em qual linha e coluna, o token está
 struct pos {
   int line;
@@ -55,21 +60,21 @@ struct token {
 struct lex_process;
 typedef char (*LEX_PROCESS_NEXT_CHAR)(struct lex_process *process);
 typedef char (*LEX_PROCESS_PEEK_CHAR)(struct lex_process *process);
-typedef char (*LEX_PROCESS_PUSH_CHAR)(struct lex_process *process, char c);
+typedef void (*LEX_PROCESS_PUSH_CHAR)(struct lex_process *process, char c);
 
 struct lex_process_functions {
-  LEX_PROCESS_NEXT_CHAR nextChar;
-  LEX_PROCESS_PEEK_CHAR peekChar;
-  LEX_PROCESS_PUSH_CHAR pushChar;
+  LEX_PROCESS_NEXT_CHAR next_char;
+  LEX_PROCESS_PEEK_CHAR peek_char;
+  LEX_PROCESS_PUSH_CHAR push_char;
 };
 
 struct lex_process {
   struct pos pos;
-  struct vector *tokenVec;
+  struct vector *token_vec;
   struct compile_process *compiler;
 
-  int currentExpressionCount;
-  struct buffer *parenthesesBuffer;
+  int current_expression_count;
+  struct buffer *parentheses_buffer;
   struct lex_process_functions *function;
 
   // esse membro será o dado privado, que o lexer não vai entender/compreender
@@ -85,14 +90,28 @@ struct compile_process {
   struct pos pos;
   struct compile_process_input_file {
     FILE *fp;
-    const char *absPath; // caminho absoluto
+    const char *abs_path; // caminho absoluto
   } cfile;
 
   FILE *ofile; // output file
 };
 
-int compile_file(const char *filename, const char *filenameOut, int flags);
-struct compile_process *
-compile_process_create(const char *filename, const char *filenameOut, int flags);
+int compile_file(const char *filename, const char *out_filename, int flags);
+struct compile_process *compile_process_create(const char *filename,
+                                               const char *filename_out,
+                                               int flags);
+
+char compile_process_next_char(struct lex_process *lex_process);
+char compile_process_peek_char(struct lex_process *lex_process);
+void compile_process_push_char(struct lex_process *lex_process, char c);
+
+struct lex_process *lex_process_create(struct compile_process *compiler,
+                                       struct lex_process_functions *functions,
+                                       void *private);
+
+void lex_process_free(struct lex_process *process);
+void *lex_process_private(struct lex_process *process);
+struct vector *lex_process_tokens(struct lex_process *process);
+int lex(struct lex_process *process);
 
 #endif
