@@ -10,6 +10,18 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#define NUMERIC_CASE                                                           \
+  case '0':                                                                    \
+  case '1':                                                                    \
+  case '2':                                                                    \
+  case '3':                                                                    \
+  case '4':                                                                    \
+  case '5':                                                                    \
+  case '6':                                                                    \
+  case '7':                                                                    \
+  case '8':                                                                    \
+  case '9'
+
 enum {
   COMPILER_FILE_COMPILED_OK,
   COMPILER_FAILED_WITH_ERRORS,
@@ -35,12 +47,13 @@ enum {
 struct pos {
   int line;
   int col;
-  const char *fileName; // indica qual arquivo está sendo verificado/checado
+  const char *filename; // indica qual arquivo está sendo verificado/checado
 };
 
 struct token {
   int type;
   int flags;
+  struct pos pos;
 
   union {
     char cval;
@@ -104,6 +117,9 @@ struct compile_process *compile_process_create(const char *filename,
 char compile_process_next_char(struct lex_process *lex_process);
 char compile_process_peek_char(struct lex_process *lex_process);
 void compile_process_push_char(struct lex_process *lex_process, char c);
+
+void compile_error(struct compile_process *compiler, const char *msg, ...);
+void compile_warning(struct compile_process *compiler, const char *msg, ...);
 
 struct lex_process *lex_process_create(struct compile_process *compiler,
                                        struct lex_process_functions *functions,
