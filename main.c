@@ -15,5 +15,5 @@ int main() {
   printf("Compilou certinho caraio\n");
 
   printf("Hello world\n");
-  return 2;
+  return 0;
 }
