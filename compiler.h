@@ -1,14 +1,14 @@
-/*
- * esse header vai conter todos os prototipos
- * que serão aceesado por todo o compilador
- *
- * */
-
 #ifndef PEACHCOMPILER_H
 #define PEACHCOMPILER_H
 
 #include <stdbool.h>
 #include <stdio.h>
+
+struct pos {
+  int line;
+  int col;
+  const char *filename;
+};
 
 #define NUMERIC_CASE                                                           \
   case '0':                                                                    \
@@ -22,10 +22,7 @@
   case '8':                                                                    \
   case '9'
 
-enum {
-  COMPILER_FILE_COMPILED_OK,
-  COMPILER_FAILED_WITH_ERRORS,
-};
+enum { LEXICAL_ANALYSIS_ALL_OK, LEXICAL_ANALYSIS_INPUT_ERROR };
 
 enum {
   TOKEN_TYPE_IDENTIFIER,
@@ -35,26 +32,13 @@ enum {
   TOKEN_TYPE_NUMBER,
   TOKEN_TYPE_STRING,
   TOKEN_TYPE_COMMENT,
-  TOKEN_TYPE_NEWLINE,
-};
-
-enum {
-  LEXICAL_ANALYSIS_ALL_OK,
-  LEXICAL_ANALYSIS_INPUT_ERROR,
-};
-
-// vai checar em qual linha e coluna, o token está
-struct pos {
-  int line;
-  int col;
-  const char *filename; // indica qual arquivo está sendo verificado/checado
+  TOKEN_TYPE_NEWLINE
 };
 
 struct token {
   int type;
   int flags;
   struct pos pos;
-
   union {
     char cval;
     const char *sval;
@@ -64,10 +48,13 @@ struct token {
     void *any;
   };
 
-  // true, se houver whitespaces entre o token atual, e o proximo token
+  // True if their is whitespace between the token and the next token
+  // i.e * a for operator token * would mean whitespace would be set for token
+  // "a"
   bool whitespace;
-  // qualquer coisa entre parenteses
-  const char *betweenBrackets;
+
+  // (5+10+20)
+  const char *between_brackets;
 };
 
 struct lex_process;
@@ -86,27 +73,32 @@ struct lex_process {
   struct vector *token_vec;
   struct compile_process *compiler;
 
+  /**
+   *
+   * ((50))
+   */
   int current_expression_count;
   struct buffer *parentheses_buffer;
   struct lex_process_functions *function;
 
-  // esse membro será o dado privado, que o lexer não vai entender/compreender
-  // mas quem estiver usando o lexer, vai conseguir compreender
+  // This will be private data that the lexer does not understand
+  // but the person using the lexer does understand.
   void *private;
 };
 
+enum { COMPILER_FILE_COMPILED_OK, COMPILER_FAILED_WITH_ERRORS };
+
 struct compile_process {
-  // flags recebe flags (quem diria), para indicar como o arquivo deve ser
-  // compilado
+  // The flags in regards to how this file should be compiled
   int flags;
 
   struct pos pos;
   struct compile_process_input_file {
     FILE *fp;
-    const char *abs_path; // caminho absoluto
+    const char *abs_path;
   } cfile;
 
-  FILE *ofile; // output file
+  FILE *ofile;
 };
 
 int compile_file(const char *filename, const char *out_filename, int flags);
@@ -118,13 +110,12 @@ char compile_process_next_char(struct lex_process *lex_process);
 char compile_process_peek_char(struct lex_process *lex_process);
 void compile_process_push_char(struct lex_process *lex_process, char c);
 
-void compile_error(struct compile_process *compiler, const char *msg, ...);
-void compile_warning(struct compile_process *compiler, const char *msg, ...);
+void compiler_error(struct compile_process *compiler, const char *msg, ...);
+void compiler_warning(struct compile_process *compiler, const char *msg, ...);
 
 struct lex_process *lex_process_create(struct compile_process *compiler,
                                        struct lex_process_functions *functions,
                                        void *private);
-
 void lex_process_free(struct lex_process *process);
 void *lex_process_private(struct lex_process *process);
 struct vector *lex_process_tokens(struct lex_process *process);

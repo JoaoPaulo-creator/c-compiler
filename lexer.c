@@ -14,9 +14,10 @@ struct token *read_next_token();
 static struct lex_process *lex_process;
 static struct token tmp_token;
 
-// peek character
+// peek char
 static char peekc() { return lex_process->function->peek_char(lex_process); }
-// next character
+
+// peek next char
 static char nextc() {
   char c = lex_process->function->next_char(lex_process);
   lex_process->pos.col += 1;
@@ -42,7 +43,7 @@ static struct token *lexer_last_token() {
   return vector_back_or_null(lex_process->token_vec);
 }
 
-struct token *handle_whitespace() {
+static struct token *handle_whitespace() {
   struct token *last_token = lexer_last_token();
   if (last_token) {
     last_token->whitespace = true;
@@ -79,25 +80,24 @@ struct token *token_make_number() {
 struct token *read_next_token() {
   struct token *token = NULL;
   char c = peekc();
-
   switch (c) {
   NUMERIC_CASE:
     token = token_make_number();
     break;
 
+  // We don't care about whitespace ignore them
   case ' ':
   case '\t':
     token = handle_whitespace();
     break;
 
-  case EOF: // case isso seja verdadeiro, indica que a analise lexica no arquivo
-            // foi finalizada
+  case EOF:
+    // We have finished lexical analysis on the file
     break;
 
   default:
-    compile_error(lex_process->compiler, "Unexpected token\n");
+    compiler_error(lex_process->compiler, "Unexpected token\n");
   }
-
   return token;
 }
 
@@ -112,6 +112,5 @@ int lex(struct lex_process *process) {
     vector_push(process->token_vec, token);
     token = read_next_token();
   }
-
   return LEXICAL_ANALYSIS_ALL_OK;
 }
