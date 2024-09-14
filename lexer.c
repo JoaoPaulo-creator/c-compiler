@@ -12,7 +12,7 @@
 struct token *read_next_token();
 
 static struct lex_process *lex_process;
-static struct token *tmp_token;
+static struct token tmp_token;
 
 // peek character
 static char peekc() { return lex_process->function->peek_char(lex_process); }
@@ -34,7 +34,7 @@ static struct pos lex_file_position() { return lex_process->pos; }
 
 struct token *token_create(struct token *_token) {
   memcpy(&tmp_token, _token, sizeof(struct token));
-  tmp_token->pos = lex_file_position();
+  tmp_token.pos = lex_file_position();
   return &tmp_token;
 }
 

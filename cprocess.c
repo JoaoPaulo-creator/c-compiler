@@ -42,7 +42,7 @@ char compile_process_next_char(struct lex_process* lex_process) {
    * */
   if (c == '\n') {
     compiler->pos.line += 1;
-    compiler->pos.col += 1;
+    compiler->pos.col = 1;
   }
 
   return c;
